@@ -1,0 +1,333 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Performance Harness</title>
+    <meta name="description" content="The HTML5 Herald">
+    <meta name="author" content="SitePoint">
+
+    <style type="text/css">
+    /** GLOBAL **/
+
+    :root {
+      --nav-bg: #11232f;
+      --nav-fg: #78797f;
+
+      --main-bg: #fff;
+      --main-color: #000;
+    }
+
+    #app {
+      font-family: "Avenir", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    /** NAVIGATION **/
+
+    .logo {
+      color: whitesmoke;
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .site-nav {
+      display: flex;
+      padding: 0.5em;
+      background-color: var(--nav-bg);
+      list-style-type: none;
+      border-radius: 0.2em;
+    }
+
+    .site-nav>li {
+      margin-top: 0;
+    }
+
+    .site-nav>li>a {
+      display: block;
+      padding: 0.5em 1em;
+      background-color: var(--nav-fg);
+      color: white;
+      text-decoration: none;
+    }
+
+    .site-nav>li+li {
+      margin-left: 1.5em;
+    }
+
+    .site-nav>.nav-right {
+      margin-left: auto;
+    }
+
+    /** MAIN **/
+
+    .main {
+      text-align: left;
+    }
+
+    h3 {
+      border-top: 1px solid black;
+      background-color: #f2f0f0;
+    }
+  </style>
+</head>
+
+<body>
+<!-- START OF APP -->
+<div id="app">
+    <nav>
+        <ul class="site-nav">
+            <li>
+                <a href="/prometheus">Prometheus</a>
+            </li>
+            <li class="nav-right">
+                <div class="logo">Analytics Bridge</div>
+            </li>
+        </ul>
+    </nav>
+
+
+    <div class="main">
+        <button @click="get_statistics">REFRESH </button>  {{lastUpdated}}
+        <div class="host">
+            <h3>Host</h3>
+            <x-modifiable label="Address" :value="data_model.host.toString()" :readonly="true"></x-modifiable>
+        </div>
+        <div class="memory">
+            <h3>Memory </h3>
+            <x-modifiable label="Max (MB)" :value="data_model.memory.max.toString()" :readonly="true"></x-modifiable>
+            <x-modifiable label="Available (MB)" :value="(data_model.memory.max - data_model.memory.total).toString()" :readonly="true"></x-modifiable>
+            <x-modifiable label="Allocated (MB)" :value="data_model.memory.total.toString()" :readonly="true"></x-modifiable>
+            <x-modifiable label="Free (MB)" :value="data_model.memory.free.toString()" :readonly="true"></x-modifiable>
+        </div>
+        <div class="agents">
+            <h3>Agents</h3>
+            <x-modifiable label="Number of Clients" @input="adjust_agent_count" :value="data_model.agentCount.toString()" :readonly="false"></x-modifiable>
+            <x-modifiable label="Agent Size" :value="data_model.agentSize.toString()" :readonly="true"></x-modifiable>
+            <x-modifiable label="Connected Count" :value="data_model.connectedCount.toString()" :readonly="true"></x-modifiable>
+            <x-toggle label="Ramp-up is" @input="ramp_up_toggle" :value="data_model.rampUpEnabled.toString()"></x-toggle>
+            <x-modifiable label="Connection Rate" @input="adjust_ramp_up" :value="data_model.agentRate.toString()" :readonly="false"></x-modifiable>
+        </div>
+        <button style="margin-top:20px;" @click="clear_agents">STOP AND REMOVE ALL AGENTS</button>
+        <div class="inspect">
+            <h3>Inspect</h3>
+
+            <!-- <p><span style="font-weight:900">Note:</span> To change configuration for anything other than the above you must stop and remove all agents and re-create them. <p> -->
+            <div style="margin-left:35px">
+                <span style="font-weight:900; margin-bottom:5px; display: inline-block;width:200px">STARTING ENDPOINT</span>
+                <span style="font-weight:900; margin-bottom:5px; display: inline-block;width:200px">ENDING ENDPOINT</span>
+                <span style="font-size:0.8rem; font-weight:600; margin-bottom:5px; display: inline-block;width:200px">(TOTAL: {{data_model.agentSize}})</span>
+                <br>
+                <span style="display: inline-block;width:200px">{{firstEndpointId}}</span>
+                <span style="display: inline-block;width:200px">{{lastEndpointId}}</span>
+            </div>
+            <br>
+
+            <x-modifiable label="Endpoint Id" @input="agent_status" :value="firstEndpointId" :readonly="false" text="Get Status"></x-modifiable>
+            <pre>{{agentStatus}}</pre>
+            <pre>{{agentDataModel}}</pre>
+
+        </div>
+        <div class="config">
+            <h3>Starting Configuration</h3>
+            <x-toggle label="Show Configuration" @input="config_toggle" value="true"></x-toggle>
+            <pre v-if="configDisplay">{{config}}</pre>
+
+        </div>
+    </div>
+
+
+    <!-- END OF APP -->
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js" integrity="sha256-4iQZ6BVL4qNKlQ27TExEhBN1HFPvAvAMbFavKKosSWQ=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.js" type="text/javascript"></script>
+
+<script>
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Configuration and Constants
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //const API_URL = 'http://localhost:8085/api';
+    const API_URL = 'api';
+
+    const CMD = {
+      PAUSE_RAMP_UP: "PAUSE_RAMP_UP",
+      RESUME_RAMP_UP: "RESUME_RAMP_UP",
+      ADJUST_RAMP_UP: "ADJUST_RAMP_UP",
+      GET_STATISTICS: "GET_STATISTICS",
+      ADJUST_AGENT_COUNT: "ADJUST_AGENT_COUNT",
+      CLEAR_AGENTS: "CLEAR_AGENTS",
+      DISCONNECT_AGENTS: "DISCONNECT_AGENTS",
+      AGENT_STATUS: "AGENT_STATUS",
+      REBOOT_AGENT: "REBOOT_AGENT",
+      INFORM_FROM_AGENT: "INFORM_FROM_AGENT",
+      UNKNOWN_COMMAND: "UNKNOWN_COMMAND"
+    }
+
+    function postManagementObj(command, value = 0) {
+      const jsonObj = {
+        'command': command,
+        'value': value
+      }
+      return axios({
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        url: `${API_URL}/management`,
+        data: jsonObj
+      })
+    }
+
+    function data_model() {
+      return {
+        host: 'localhost',
+        startingSerialNumber: "0",
+        oui: "",
+        agentSize: 0,
+        agentCount: 0,
+        agentRate: 0,
+        connectedCount: 0,
+        memory: {
+          free: 0,
+          max: 0,
+          total: 0,
+        },
+        rampUpEnabled: false
+      }
+    }
+
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Vue Component
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Vue.component('xModifiable', {
+      template: `
+      <div style="margin-bottom: 5px">
+          <label style="font-size: 0.9rem; display: inline-block;text-align: right;font-weight:900;min-width:10em">{{label}}:</label>
+          <input :value="value" @keyup="propagate" :readonly="readonly"/><button @click="btnClick" :disabled="readonly">{{text}}</button>
+      </div>
+      `,
+      props: {
+        label: {
+          type: String
+        },
+        value: {
+          type: String
+        },
+        readonly: {
+          type: Boolean
+        },
+       text: {
+          type: String,
+          default: "Modify"
+        }
+      },
+      data() {
+        return {
+          textInput: this.value
+        }
+      },
+      methods: {
+        propagate(eventValue) {
+          this.textInput = eventValue.target.value
+        },
+        btnClick() {
+          this.$emit('input', this.textInput)
+        }
+      },
+      watch: {
+        value(val) {
+          this.textInput = val
+        }
+      }
+    })
+
+    Vue.component('xToggle', {
+      template: `
+      <div style="margin-bottom: 5px">
+          <label style="font-size: 0.9rem; display: inline-block;text-align: right;font-weight:900;min-width:10em">{{label}}:</label>
+          <button @click="btnClick">{{enabledText}}</button>
+      </div>
+      `,
+      props: {
+        label: {
+          type: String
+        },
+        value: {
+          type: String
+        }
+      },
+      data() {
+        return {
+          enabled: this.value,
+        }
+      },
+      methods: {
+        btnClick() {
+          this.enabled = !this.enabled
+          this.$emit('input', this.enabled)
+        }
+      },
+      computed: {
+        enabledText() {
+          return this.enabled ? " enabled" : " disabled"
+        }
+      },
+      watch: {
+        value(val) {
+          if (val === true || val === 'true') {
+            this.enabled = true
+          } else {
+            this.enabled = false
+          }
+        }
+      }
+    })
+
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Vuejs Main
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Vue.config.productionTip = false
+    new Vue({
+      el: '#app',
+      //-----------------------------------------------------------------------------------
+      // Data
+      //-----------------------------------------------------------------------------------
+      data: {
+
+
+      },
+      //-----------------------------------------------------------------------------------
+      // Methods
+      //-----------------------------------------------------------------------------------
+      methods: {
+
+
+        /** API CALLS **/
+        async getConfig() {
+          const config = await axios({ method: 'get', url: `${API_URL}/config`, })
+          this.config = config.data
+        },
+
+      },
+      computed: {
+
+      },
+      mounted() {
+        //this.get_statistics()
+        //this.getConfig()
+      }
+    });
+
+  </script>
+
+</body>
+
+</html>
