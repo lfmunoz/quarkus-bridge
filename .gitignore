@@ -10,6 +10,9 @@ bin/
 *.iml
 *.iws
 
+out/
+build.txt
+
 # NetBeans
 nb-configuration.xml
 

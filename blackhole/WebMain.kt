@@ -13,6 +13,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 
+/*
 @Path("/api")
 class WebMain {
 
@@ -115,6 +116,9 @@ class WebMain {
     }
 
 }
+
+
+ */
 
 data class ElementDataModel (
         val receiveCount: Int? = null,

@@ -33,3 +33,8 @@ Or you can use Docker to build the native executable using: `./gradlew buildNati
 You can then execute your binary: `./build/quarkus-analytics-1.0.0-runner`
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling#building-a-native-executable .
+
+
+
+
+rabbitmq/elementDataModel

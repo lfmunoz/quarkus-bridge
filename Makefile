@@ -2,9 +2,12 @@
 
 # /home/luis/.sdkman/candidates/java/19.3.1.r8-grl/bin/gu install native-image
 config:
-	source /home/luis/.sdkman/bin/sdkman-init.sh
-	sdk use mvn 3.6.3
+	#source /home/luis/.sdkman/bin/sdkman-init.sh
+	sdk use maven 3.6.3
 	sdk use java 19.3.1.r8-grl
+
+# ./gradlew addExtension --extensions="vertx"
+# ./gradlew listExtensions
 
 .PHONY: run build
 
@@ -21,7 +24,8 @@ package:
 
 # Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-native-image:19.3.1-java11
 package-native:
-	./gradlew buildNative
+	#./gradlew buildNative --stacktrace --debug --scan
+	./gradlew buildNative --docker-build=true
 
 package-docker:
 # 	 ./gradlew buildNative --docker-build=true --stacktrace
