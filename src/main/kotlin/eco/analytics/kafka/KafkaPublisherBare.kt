@@ -18,10 +18,7 @@ import java.util.*
 /**
  *
  */
-class KafkaPublisherBare<T>(
-        private val clazz: Class<T>
-) {
-
+class KafkaPublisherBare {
     companion object {
         private val log = FluentLoggerFactory.getLogger(KafkaPublisherBare::class.java)
     }
@@ -43,10 +40,10 @@ class KafkaPublisherBare<T>(
     }
 
 
-    suspend fun publishFlow(aFlow: Flow<T>) : GenericResult<String> {
+    suspend fun publishFlow(aFlow: Flow<KafkaMessage>) : GenericResult<String> {
         return try {
             aFlow.collect { item ->
-                aKafkaProducer.send(producerRecord(item)) { metadata: RecordMetadata, e: Exception? ->
+                aKafkaProducer.send(buildProducerRecord(item)) { metadata: RecordMetadata, e: Exception? ->
                     e?.let {
                         e.printStackTrace()
                     }  ?:  log.trace().log("The offset of the record we just sent is: " + metadata.offset())
@@ -58,12 +55,11 @@ class KafkaPublisherBare<T>(
         }
     }
 
-
     // Note that callbacks will generally execute in the I/O thread of the producer and so should be reasonably fast or
     // they will delay the sending of messages from other threads.
-    fun publish(message: T): GenericResult<String> {
+    fun publishMessage(message: KafkaMessage): GenericResult<String> {
         return try {
-            aKafkaProducer.send(producerRecord(message)) { metadata: RecordMetadata, e: Exception? ->
+            aKafkaProducer.send(buildProducerRecord(message)) { metadata: RecordMetadata, e: Exception? ->
                 e?.let {
                     e.printStackTrace()
                 } // ?:  println("The offset of the record we just sent is: " + metadata.offset())
@@ -74,23 +70,8 @@ class KafkaPublisherBare<T>(
         }
     }
 
-    // Use flows here to allow back-pressure and suspending (async)
-    // Notice how errors are guaranteed not to propagate out of here.
-    @InternalCoroutinesApi
-    suspend fun publish(paragonFlow: Flow<T>): GenericResult<String> {
-        return try {
-            paragonFlow.collect { publish(it) }
-            GenericResult.Success("OK")
-        } catch (e: Exception) {
-            GenericResult.Failure("NOK", e)
-        }
-    }
-
-    private fun producerRecord(value: T): ProducerRecord<String, String> {
-//        return ProducerRecord(topic, key, value)
-        val json = mapper.writeValueAsString(value)
-        return ProducerRecord(topic, json)
-//        return ProducerRecord(topic, json)
+    private fun buildProducerRecord(aKafkaMessage: KafkaMessage): ProducerRecord<String, String> {
+        return ProducerRecord(topic, aKafkaMessage.key, aKafkaMessage.value)
     }
 
     private fun producerProps(bootstrapServer: String): Properties {
@@ -107,4 +88,4 @@ class KafkaPublisherBare<T>(
         aKafkaProducer?.close()
     }
 
-}
+}// end of KafkaPublisherBare
