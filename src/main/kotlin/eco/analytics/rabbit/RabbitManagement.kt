@@ -59,9 +59,9 @@ open class RabbitManagement {
         log.info().log("The application is starting...")
         log.info().log("---------------------------------------------------------------")
 
-        scope.launch {
-            createConsumer()
-        }
+//        scope.launch {
+//            createConsumer()
+//        }
     }
 
     fun onStop(@Observes ev: ShutdownEvent?) {

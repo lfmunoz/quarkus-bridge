@@ -37,7 +37,8 @@ class KafkaIntTest {
 //    private val scope = CoroutineScope(tPool)
 
 
-    private val bootstrapServer: String = "oc112-22.maas.auslab.2wire.com:9092"
+//    private val bootstrapServer: String = "oc112-22.maas.auslab.2wire.com:9092"
+    private val bootstrapServer: String = "10.37.240.46:9094"
     private val groupId: String = "analytics-bridge"
     private val topic: String = "analytics-bridge-test"
 
@@ -86,6 +87,7 @@ class KafkaIntTest {
     //________________________________________________________________________________
     // Tests
     //________________________________________________________________________________
+    @Disabled
     @Test
     fun `deserialize and serialize`() {
 //        val obj = newParagonMessage()
@@ -93,6 +95,7 @@ class KafkaIntTest {
 //        val objRead = mapper.readValue<ParagonMessage>(json)
 //        Assertions.assertThat(obj).isEqualTo(obj)
 //        genJsonObject().toString()
+        assertThat(true).isTrue()
     }
 
 

@@ -90,6 +90,7 @@ class KafkaPublisherBare<T>(
 //        return ProducerRecord(topic, key, value)
         val json = mapper.writeValueAsString(value)
         return ProducerRecord(topic, json)
+//        return ProducerRecord(topic, json)
     }
 
     private fun producerProps(bootstrapServer: String): Properties {
