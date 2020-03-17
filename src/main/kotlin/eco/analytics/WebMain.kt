@@ -101,7 +101,8 @@ open class WebMain {
                         it.asFlow()
                     }.map {
                         val key = it.id()
-                        val value = mapper.writeValueAsString(it.properties())
+//                        val value = mapper.writeValueAsString(it.properties())
+                        val value = mapper.writeValueAsString(it)
                         KafkaMessage(key, value)
                     }
             //.produceIn(myScope)

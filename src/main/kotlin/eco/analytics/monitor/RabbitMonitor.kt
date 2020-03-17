@@ -1,8 +1,10 @@
-package eco.analytics.rabbit
+package eco.analytics.monitor
 
 import eco.analytics.ELEMENT_DATA_ADDR
 import eco.analytics.ELEMENT_DATA_MODEL_ADDR
 import eco.analytics.mapper
+import eco.analytics.rabbit.ElementDataModel
+import eco.analytics.rabbit.ElementProperty
 import eco.model.ElementData
 import io.quarkus.vertx.ConsumeEvent
 import kotlinx.coroutines.CoroutineScope
@@ -110,13 +112,13 @@ open class RabbitMonitor {
                 count = 1.0,
                 min = value.toDouble(),
                 max = value.toDouble(),
-                avg =  value.toDouble(),
+                avg = value.toDouble(),
                 values = mutableSetOf(value)
         )
     }
 
     fun receiveNewString(value: String)  : ElementProperty {
-        return ElementProperty( isNumber= false, count = 1.0, values = mutableSetOf(value))
+        return ElementProperty(isNumber = false, count = 1.0, values = mutableSetOf(value))
     }
 
 } // RabbitMonitor

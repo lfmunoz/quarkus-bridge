@@ -12,7 +12,9 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import javax.inject.Singleton
 
-
+//________________________________________________________________________________
+// JSON CONFIG
+//________________________________________________________________________________
 //@Singleton
 //class RegisterCustomModuleCustomizer : ObjectMapperCustomizer {
 //    override fun customize(mapper: ObjectMapper) {
@@ -20,26 +22,34 @@ import javax.inject.Singleton
 //    }
 //}
 
-const val ELEMENT_DATA_ADDR= "elementData.source"
-const val ELEMENT_DATA_MODEL_ADDR = "elementData.model"
-
-
-fun <T> CoroutineScope.flatten(channel: ReceiveChannel<List<T>>): ReceiveChannel<T> = produce {
-    for (items in channel) {
-        for(item in items) send(item)
-    }
-}
-
 val mapper = jacksonObjectMapper()
         .registerModule(Jdk8Module())
         .registerModule(JavaTimeModule()) // new module, NOT JSR310Module
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
+//________________________________________________________________________________
+// GLOBAL CONSTANTS
+//________________________________________________________________________________
+const val ELEMENT_DATA_ADDR= "elementData.source"
+const val ELEMENT_DATA_MODEL_ADDR = "elementData.model"
 
-
+//________________________________________________________________________________
+// GLOBAL OBJECTS
+//________________________________________________________________________________
 sealed class GenericResult<R> {
     data class Success<R>(val result: R): GenericResult<R>()
     data class Failure<R>(val message: String, val cause: Exception? = null) : GenericResult<R>()
 }
+
+//________________________________________________________________________________
+// GLOBAL METHODS
+//________________________________________________________________________________
+fun <T> CoroutineScope.flatten(channel: ReceiveChannel<List<T>>): ReceiveChannel<T> = produce {
+    for (items in channel) {
+        for(item in items) send(item)
+    }
+}
+
+
 

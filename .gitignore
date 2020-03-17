@@ -1,3 +1,8 @@
+# MISC
+out/
+build.txt
+**.tgz
+
 # Eclipse
 .project
 .classpath
@@ -10,8 +15,6 @@ bin/
 *.iml
 *.iws
 
-out/
-build.txt
 
 # NetBeans
 nb-configuration.xml
