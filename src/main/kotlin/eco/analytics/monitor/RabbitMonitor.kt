@@ -18,6 +18,9 @@ import java.util.regex.Pattern
 import javax.enterprise.context.ApplicationScoped
 
 
+/**
+ *
+ */
 @ApplicationScoped
 open class RabbitMonitor {
 

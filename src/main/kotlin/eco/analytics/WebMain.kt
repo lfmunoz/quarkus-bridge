@@ -4,8 +4,6 @@ import eco.analytics.kafka.KafkaMessage
 import eco.analytics.kafka.KafkaPublisherBare
 import eco.analytics.rabbit.ElementDataModel
 import eco.analytics.rabbit.RabbitConsumerBare
-import eco.model.ElementData
-import eco.model.ElementDataList
 import io.vertx.axle.core.eventbus.EventBus
 import io.vertx.axle.core.eventbus.Message
 import io.vertx.core.json.JsonObject
@@ -61,58 +59,11 @@ open class WebMain {
     @GET
     @Path("bridge-start")
     @Produces(MediaType.TEXT_PLAIN)
-//    @Produces(MediaType.APPLICATION_JSON)
     fun bridgeStart(): String {
         log.info().log("[api call to bridge-start]")
-        scope.launch {
-            try {
-                start()
-            } catch (e: Exception) {
-                log.error().withCause(e).log("Error in bridge between rabbit and kafka")
-            }
-        }
         return "OK"
-//        return json {
-//            obj("running" to true)
-//        }
     }
 
-
-
-    init {
-
-    }
-
-
-    @InternalCoroutinesApi
-    suspend fun start() {
-        log.info().log("Starting bridge between RABBIT and KAFKA")
-        val aRabbitConsumerBare = RabbitConsumerBare(uri)
-        val aKafkaPublisherBare = KafkaPublisherBare()
-        try {
-            aKafkaPublisherBare.connect(bootstrapServer, topic)
-            // start consuming rabbit messages
-            val elementDataFlow = aRabbitConsumerBare.connect(elementDataExchange, elementDataQueue)
-                    .map {
-                        val aElementDataList = mapper.readValue(it, ElementDataList::class.java)
-                        aElementDataList.values()
-                    }.flatMapConcat {
-                        // val bytes = mapper.writeValueAsBytes(it)
-                        it.asFlow()
-                    }.map {
-                        val key = it.id()
-//                        val value = mapper.writeValueAsString(it.properties())
-                        val value = mapper.writeValueAsString(it)
-                        KafkaMessage(key, value)
-                    }
-            //.produceIn(myScope)
-            val result = aKafkaPublisherBare.publishFlow(elementDataFlow)
-            log.info().log("$result")
-        } finally {
-            aKafkaPublisherBare.close()
-            aRabbitConsumerBare.close()
-        }
-    }
 
 
 }

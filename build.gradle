@@ -1,12 +1,28 @@
+buildscript {
+
+}
+
+
 plugins {
     id 'org.jetbrains.kotlin.jvm' version "1.3.61"
     id "org.jetbrains.kotlin.plugin.allopen" version "1.3.61"
-    id 'io.quarkus' version '1.2.1.Final'
+    id 'io.quarkus'
 }
+
+
+
 
 repositories {
      mavenLocal()
      mavenCentral()
+    maven {
+        name "eco-nexus"
+        if (project.version.endsWith('-SNAPSHOT')) {
+            url "https://nexus.arriseco.com/content/repositories/snapshots"
+        } else {
+            url "https://nexus.arriseco.com/content/repositories/releases"
+        }
+    }
 }
 
 dependencies {
@@ -84,3 +100,4 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8
 }
+
