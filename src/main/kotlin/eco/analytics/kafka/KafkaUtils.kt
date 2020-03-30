@@ -1,8 +1,8 @@
 package eco.analytics.kafka
 
 class KafkaMessage(
-        val key: String,
-        val value: String
+        val key: ByteArray,
+        val value: ByteArray
 )
 
 //data class KafkaMessage(
@@ -27,7 +27,8 @@ class KafkaMessage(
 //________________________________________________________________________________
 data class KafkaConfig(
         var bootstrapServer: String = "",
-        var kafkaTopic: String = ""
+        var topic: String = "",
+        var compression: String = "LZ4"
 ) : java.io.Serializable {
 //    constructor(params: ParameterTool) : this(
 //            params.get("bootstrapServer", "localhost:9092"),

@@ -5,7 +5,7 @@ import eco.analytics.ELEMENT_DATA_MODEL_ADDR
 import eco.analytics.mapper
 import eco.analytics.rabbit.ElementDataModel
 import eco.analytics.rabbit.ElementProperty
-import eco.model.ElementData
+//import eco.model.ElementData
 import io.quarkus.vertx.ConsumeEvent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -21,6 +21,7 @@ import javax.enterprise.context.ApplicationScoped
 /**
  *
  */
+/*
 @ApplicationScoped
 open class RabbitMonitor {
 
@@ -127,3 +128,4 @@ open class RabbitMonitor {
 } // RabbitMonitor
 
 
+*/

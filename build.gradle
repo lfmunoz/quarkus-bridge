@@ -29,8 +29,8 @@ dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
 
     // MISC
-    implementation("pace.eco:model:1.47")
-    implementation("eco:shared-amqp:1.12")
+//    implementation("pace.eco:model:1.47")
+//    implementation("eco:shared-amqp:1.12")
     implementation("com.google.guava:guava:19.0")
     implementation("org.fissore:slf4j-fluent:0.12.0")
     implementation("ch.qos.logback:logback-core:1.2.3")
@@ -48,11 +48,15 @@ dependencies {
     // QUARKUS
     implementation "io.quarkus:quarkus-kotlin"
     implementation "io.quarkus:quarkus-vertx"
-    implementation 'io.quarkus:quarkus-jackson'
+//    implementation 'io.quarkus:quarkus-jackson'
     implementation "io.quarkus:quarkus-resteasy"
-    implementation 'io.quarkus:quarkus-resteasy-jackson'
+    implementation("io.quarkus:quarkus-resteasy-jackson")
     implementation("io.quarkus:quarkus-kafka-client:$quarkusPlatformVersion")
     implementation 'io.quarkus:quarkus-smallrye-reactive-messaging'
+
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.10.2'
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.10.2'
+
 
     // KOTLIN
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.61"

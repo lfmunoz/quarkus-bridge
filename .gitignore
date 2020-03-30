@@ -3,6 +3,8 @@ out/
 build.txt
 **.tgz
 
+blackhole/
+
 # Eclipse
 .project
 .classpath

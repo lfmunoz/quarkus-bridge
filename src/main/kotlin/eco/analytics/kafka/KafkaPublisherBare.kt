@@ -18,27 +18,15 @@ import java.util.*
 /**
  *
  */
-class KafkaPublisherBare {
-    companion object {
-        private val log = FluentLoggerFactory.getLogger(KafkaPublisherBare::class.java)
-    }
+class KafkaPublisherBare(
+        private val aKafkaConfig: KafkaConfig
+) {
 
-    val compressionType: String = "LZ4"
-
-    //    bootstrapServer 10.37.240.46:9094
-    private lateinit var topic: String
-    private lateinit var bootstrapServer: String
+    private val log = FluentLoggerFactory.getLogger(KafkaPublisherBare::class.java)
 
     // The producer is thread safe and sharing a single producer instance across threads will generally be faster than
     // having multiple instances.
-    private lateinit var aKafkaProducer: KafkaProducer<String, String>
-
-    fun connect(config_bootstrapServer: String, config_topic: String) {
-        bootstrapServer = config_bootstrapServer
-        topic = config_topic
-        aKafkaProducer = KafkaProducer<String, String>(producerProps(bootstrapServer))
-    }
-
+    private val aKafkaProducer = KafkaProducer<ByteArray, ByteArray>(producerProps(aKafkaConfig.bootstrapServer))
 
     suspend fun publishFlow(aFlow: Flow<KafkaMessage>) : GenericResult<String> {
         return try {
@@ -62,7 +50,7 @@ class KafkaPublisherBare {
             aKafkaProducer.send(buildProducerRecord(message)) { metadata: RecordMetadata, e: Exception? ->
                 e?.let {
                     e.printStackTrace()
-                } // ?:  println("The offset of the record we just sent is: " + metadata.offset())
+                } ?:  log.trace().log("The offset of the record we just sent is: " + metadata.offset())
             }
             GenericResult.Success("OK")
         } catch (e: Exception) {
@@ -70,16 +58,17 @@ class KafkaPublisherBare {
         }
     }
 
-    private fun buildProducerRecord(aKafkaMessage: KafkaMessage): ProducerRecord<String, String> {
-        return ProducerRecord(topic, aKafkaMessage.key, aKafkaMessage.value)
+    private fun buildProducerRecord(aKafkaMessage: KafkaMessage): ProducerRecord<ByteArray, ByteArray> {
+        return ProducerRecord(aKafkaConfig.topic, aKafkaMessage.key, aKafkaMessage.value)
     }
 
     private fun producerProps(bootstrapServer: String): Properties {
-        val serializer = StringSerializer::class.java.canonicalName
+//        val serializer = StringSerializer::class.java.canonicalName
+//        val serializer = StringSerializer::class.java.canonicalName
         val props = Properties()
         props.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer)
-        props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, serializer)
-        props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, serializer)
+//        props.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, serializer)
+//        props.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, serializer)
         return props
     }
 
